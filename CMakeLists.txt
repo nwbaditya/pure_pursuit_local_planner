@@ -67,3 +67,9 @@ install(DIRECTORY include/${PROJECT_NAME}/
         DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
         PATTERN ".svn" EXCLUDE
         )
+
+if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
+  catkin_add_gtest(tests_pure_pursuit_local_planner test/utest.launch test/utest.cpp)
+  target_link_libraries(tests_pure_pursuit_local_planner ${catkin_LIBRARIES})
+endif()

@@ -101,16 +101,19 @@ namespace pure_pursuit_local_planner {
 
         geometry_msgs::PoseStamped globalCoordinates;
         costmap_ros_->getRobotPose(globalCoordinates);
-        std::vector<double> localCoordiantes;
+        std::vector<double> localCoordinates;
         double look_ahead = 20;
-        getGoalLocalCoordinates(localCoordiantes, globalCoordinates, look_ahead);
+        getGoalLocalCoordinates(localCoordinates, globalCoordinates, look_ahead);
         double yaw = tf2::getYaw(globalCoordinates.pose.orientation);
-        setControls(localCoordiantes, cmd_vel,yaw);
+        setControls(localCoordinates, cmd_vel,yaw);
         double distanceToGoal = getEuclideanDistance(globalCoordinates.pose.position.x,
-                                                     global_plan_[global_plan_.size()-1].pose.position.x,
                                                      globalCoordinates.pose.position.y,
+                                                     global_plan_[global_plan_.size()-1].pose.position.x,
                                                      global_plan_[global_plan_.size()-1].pose.position.y);
-        if(distanceToGoal < 0.1)
+        
+        ROS_INFO("Distance to Goal %f, ", distanceToGoal);
+        ROS_INFO("pos_acc %f", config_.position_accuracy);
+        if(distanceToGoal < config_.position_accuracy)
         {
             goal_reached_ = true;
             cmd_vel.linear.x = 0;
@@ -129,7 +132,7 @@ namespace pure_pursuit_local_planner {
         return goal_reached_;
     }
 
-    void PurePursuitPlannerROS::getGoalLocalCoordinates(std::vector<double> &localCoordiantes,
+    void PurePursuitPlannerROS::getGoalLocalCoordinates(std::vector<double> &localCoordinates,
                                                      geometry_msgs::PoseStamped globalCoordinates,
                                                      double look_ahead) {
         double x_global = globalCoordinates.pose.position.x;
@@ -145,19 +148,19 @@ namespace pure_pursuit_local_planner {
         }
 
         double yaw = tf2::getYaw(globalCoordinates.pose.orientation);
+        
+        localCoordinates.push_back((x_goal_global - x_global) * cos(-yaw) - (y_goal_global - y_global) * sin(-yaw));
+        localCoordinates.push_back((x_goal_global - x_global) * sin(-yaw) + (y_goal_global - y_global) * cos(-yaw));
 
-        localCoordiantes.push_back((x_goal_global - x_global) * cos(-yaw) - (y_goal_global - y_global) * sin(-yaw));
-        localCoordiantes.push_back((x_goal_global - x_global) * sin(-yaw) + (y_goal_global - y_global) * cos(-yaw));
-
+        // ROS_INFO("Local Coordinates = [%f, %f]", localCoordinates[0], localCoordinates[1]);
     }
 
     void PurePursuitPlannerROS::setControls(std::vector<double> look_ahead, geometry_msgs::Twist& cmd_vel, double yaw){
 
         double distance_square = look_ahead[0]*look_ahead[0] + look_ahead[1]*look_ahead[1];
 
-        cmd_vel_linear_x_ = 0.5*(sqrt(distance_square));
-
-        cmd_vel_angular_z_ = 0.5*((2*look_ahead[1]/(distance_square)));
+        cmd_vel_linear_x_ = config_.kp_linear*(sqrt(distance_square));
+        cmd_vel_angular_z_ = config_.kp_angular*((2*look_ahead[1]/(distance_square)));
         cmd_vel.angular.z = cmd_vel_angular_z_;
         cmd_vel.linear.x = cmd_vel_linear_x_;
 

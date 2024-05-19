@@ -69,10 +69,12 @@
   <exec_depend>roscpp</exec_depend>
   <exec_depend>tf2</exec_depend>
 
+  <!-- <package format="2">
+    <test_depend>rosunit</test_depend>
+  </package> -->
 
   <!-- The export tag contains other, unspecified, tags -->
-  <export>
-    <!-- Other tools can request additional information be placed here -->
-
+ <export>
+    <nav_core plugin="${prefix}/blp_plugin.xml"/>
   </export>
 </package>

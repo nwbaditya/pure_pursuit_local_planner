@@ -1,7 +1,7 @@
 #ifndef PURE_PURSUIT_PLANNER_H_
 #define PURE_PURSUIT_PLANNER_H_
 
-// Original repo: 
+// Original repo: https://github.com/raphaelkba/pure_pursuit
 // Ported by Nawab Aditya
 
 #include <nav_core/base_local_planner.h>
